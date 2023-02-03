@@ -10,7 +10,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserDaoJDBCImpl extends Util implements UserDao {
+public class UserDaoJDBCImpl implements UserDao {
 
 
     public UserDaoJDBCImpl() {
@@ -18,7 +18,7 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
     }
 
     public void createUsersTable() {
-                String sql = "CREATE TABLE IF NOT EXISTS USERS \n" +
+        String sql = "CREATE TABLE IF NOT EXISTS USERS \n" +
                 "(\n" +
                 "    id INT AUTO_INCREMENT PRIMARY KEY,\n" +
                 "    name VARCHAR(255) NOT NULL,\n" +
@@ -26,37 +26,34 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
                 "    age int NOT NULL\n" +
                 "    \n" +
                 ")";
-        try (Statement statement = getConnection().createStatement()) {
-            if (statement.execute("SHOW TABLES LIKE 'yourtable';"))
+        try (Statement statement = Util.getConnection().createStatement()) {
 
             statement.execute(sql);
-
 
         } catch (SQLException e) {
             e.printStackTrace();
 
         }
-
     }
 
     public void dropUsersTable() {
+
         String sql = "DROP TABLE IF EXISTS USERS;";
-        try (Statement statement = getConnection().createStatement()) {
+
+        try (Statement statement = Util.getConnection().createStatement()) {
 
             statement.execute(sql);
 
         } catch (SQLException e) {
 
         }
-
     }
 
     public void saveUser(String name, String lastName, byte age) {
 
-
         String sql = "INSERT INTO USERS (NAME, LASTNAME, AGE) VALUES(?, ?, ?)";
 
-        try (PreparedStatement preparedStatement = getConnection().prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = Util.getConnection().prepareStatement(sql)) {
 
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, lastName);
@@ -68,35 +65,28 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        // использовать prepareStatement для работы с данными внутри таблицы
-        // DDL -  \DML - язык манипулирования данными SELECT – выборка данных
-                                                    //INSERT – вставка новых данных
-                                                    //UPDATE – обновление данных
-                                                    //DELETE – удаление данных
-                                                    //MERGE – слияние данных
     }
 
     public void removeUserById(long id) {
 
         String sql = "DELETE FROM USERS WHERE ID=?";
 
-        try (PreparedStatement preparedStatement = getConnection().prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = Util.getConnection().prepareStatement(sql)) {
 
-            preparedStatement.setLong(1,id);
+            preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
     }
 
     public List<User> getAllUsers() {
         List<User> userList = new ArrayList<>();
 
-        String sql ="SELECT NAME, LASTNAME, AGE FROM USERS";
+        String sql = "SELECT NAME, LASTNAME, AGE FROM USERS";
 
-        try (PreparedStatement preparedStatement= getConnection().prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = Util.getConnection().prepareStatement(sql)) {
 
             ResultSet resultSet = preparedStatement.executeQuery(sql);
             while (resultSet.next()) {
@@ -119,7 +109,7 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
 
         String sql = "DELETE FROM USERS;";
 
-        try (PreparedStatement preparedStatement = getConnection().prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = Util.getConnection().prepareStatement(sql)) {
 
             preparedStatement.executeUpdate(sql);
 
