@@ -47,6 +47,7 @@ public class Util {
                 settings.put(Environment.USER, "root");
                 settings.put(Environment.PASS, "root");
                 settings.put(Environment.DIALECT, "org.hibernate.dialect.MySQL5Dialect");
+                settings.put(Environment.DEFAULT_SCHEMA,"mydbtest");
 
 
                 settings.put(Environment.SHOW_SQL, "true");
