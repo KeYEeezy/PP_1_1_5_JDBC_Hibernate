@@ -16,6 +16,10 @@ public class UserDaoHibernateImpl implements UserDao {
 
     }
 
+    @Override
+    public void getMeta() {
+
+    }
 
     @Override
     public void createUsersTable() {

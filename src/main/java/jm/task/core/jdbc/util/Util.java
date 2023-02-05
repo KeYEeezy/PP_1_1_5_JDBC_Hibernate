@@ -8,23 +8,61 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
 
 public class Util {
     // реализуйте настройку соеденения с БД
     private static final String DB_DRIVER = "com.mysql.cj.jdbc.Driver";
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/mydbtest";
-    private static final String DB_USERNAME = "root";
-    private static final String DB_PASSWORD = "root";
+    private static final String DB_URL_KEY = "db.url";
+    private static final String DB_USERNAME_KEY = "db.username";
+    private static final String DB_PASSWORD_KEY = "db.password";
+    private static final String DB_POOL_SIZE_KEY = "db.pool.size";
+    private static BlockingQueue<Connection> pool;
 
-    public static Connection getConnection() {
+    static {
+        initConnectionPool();
+    }
+
+    public Util() {
+    }
+
+    private static void initConnectionPool() {
+        int size = Integer.parseInt(PropertiesUtil.get(DB_POOL_SIZE_KEY));
+        pool = new ArrayBlockingQueue<>(Integer.parseInt(PropertiesUtil.get(DB_POOL_SIZE_KEY)));
+        for (int i = 0; i <size; i++) {
+            Connection connection = open();
+            Connection proxyConnection = (Connection) Proxy.newProxyInstance(Util.class.getClassLoader(), new Class[]{Connection.class},
+                    (proxy, method, args) -> method.getName().equals("close")
+                            ? pool.add((Connection) proxy)
+                            : method.invoke(connection,args));
+            pool.add(proxyConnection);
+
+        }
+    }
+    public static Connection getConnection(){
+        try {
+            return pool.take();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static Connection open() {
         Connection connection = null;
         try {
-            Class.forName(DB_DRIVER);
-            connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            connection = DriverManager.getConnection(PropertiesUtil.get(DB_URL_KEY),
+                                                    PropertiesUtil.get(DB_USERNAME_KEY),
+                                                    PropertiesUtil.get(DB_PASSWORD_KEY));
             //System.out.println("Connection ok");
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
